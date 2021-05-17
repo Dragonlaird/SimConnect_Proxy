@@ -64,7 +64,7 @@ namespace SimConnect_Proxy
             this.txtSenderAddress.Name = "txtSenderAddress";
             this.txtSenderAddress.Size = new System.Drawing.Size(100, 20);
             this.txtSenderAddress.TabIndex = 1;
-            this.txtSenderAddress.Text = "localhost";
+            this.txtSenderAddress.Text = "192.168.2.9";
             // 
             // txtListenerPort
             // 
