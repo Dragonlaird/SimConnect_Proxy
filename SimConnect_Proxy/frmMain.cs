@@ -43,7 +43,7 @@ namespace SimConnect_Proxy
                 _proxy.LocalDataReceived += LocalDataReceived;
                 _proxy.Notifications += NotificationReceived;
                 _proxy.StartListener(listenerAddress, listenerPort);
-                _proxy.StartSender(senderAddress, senderPort);
+                //_proxy.StartSender(senderAddress, senderPort);
                 ((Button)sender).Text = "Stop Proxy";
             }
             else
@@ -76,6 +76,7 @@ namespace SimConnect_Proxy
 
         private void LocalConnected(object sender, bool e)
         {
+            _proxy.StartSender(txtSenderAddress.Text, (int)txtSenderPort.Value);
             if (cbLocalConnected.InvokeRequired)
             {
                 cbLocalConnected.Invoke(new Action(() => cbLocalConnected.Checked = e));

@@ -129,7 +129,7 @@ internal class ProxyConnector:IDisposable
         _socket = new Socket(_socketEP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
         _socket.Blocking = false;
         _socket.BeginConnect(_socketEP, new AsyncCallback(AcceptConnectionCallback), _socket);
-        connectDone.WaitOne();
+        //connectDone.WaitOne();
     }
 
     /// <summary>
@@ -158,19 +158,26 @@ internal class ProxyConnector:IDisposable
     /// <param name="ar">Connection result details</param>
     private void AcceptConnectionCallback(IAsyncResult ar)
     {
-        var socket = (Socket)ar.AsyncState;
-        socket.EndConnect(ar);
-        SendNotification($"Connection Established: {_socketEP.Address.ToString()}:{_socketEP.Port}");
-        //StateObject state = new StateObject();
-        //state.WorkSocket = socket;
-        //socket.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-        //    new AsyncCallback(ReadDataCallback), state);
+        try
+        {
+            var socket = (Socket)ar.AsyncState;
+            socket.EndConnect(ar);
+            SendNotification($"Connection Established: {_socketEP.Address.ToString()}:{_socketEP.Port}");
+            //StateObject state = new StateObject();
+            //state.WorkSocket = socket;
+            //socket.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+            //    new AsyncCallback(ReadDataCallback), state);
 
-        IsConnected = socket.Connected;
+            IsConnected = socket.Connected;
 
-        if (Connected != null)
-            Task.Run(() => Connected.DynamicInvoke(this, true));
-        connectDone.Set();
+            if (Connected != null)
+                Task.Run(() => Connected.DynamicInvoke(this, true));
+            //connectDone.Set();
+        }
+        catch(Exception ex)
+        {
+            SendNotification(ex);
+        }
     }
 
     private void AcceptListenerCallback(IAsyncResult ar)
@@ -309,6 +316,12 @@ internal class ProxyConnector:IDisposable
     /// </summary>
     public void Dispose()
     {
+        if (_socket.Connected)
+            try
+            {
+                _socket?.Shutdown(SocketShutdown.Both);
+            }
+            catch { }
         _socket?.Dispose();
         _socketEP = null;
     }
