@@ -22,6 +22,20 @@ public class Proxy:IDisposable
 
     public Proxy()
     {
+        Initialise();
+    }
+
+    private void Initialise()
+    {
+        _listener = new ProxyConnector();
+        _listener.Notifications += SendNotification;
+        _listener.Connected += ProxyConnected;
+        _listener.DataReceived += DataReceived;
+
+        _sender = new ProxyConnector();
+        _sender.Notifications += SendNotification;
+        _sender.Connected += ProxyConnected;
+        _sender.DataReceived += DataReceived;
 
     }
 
@@ -53,10 +67,6 @@ public class Proxy:IDisposable
             return;
         }
 
-        _listener = new ProxyConnector();
-        _listener.Notifications += SendNotification;
-        _listener.Connected += ProxyConnected;
-        _listener.DataReceived += DataReceived;
         _listener.Listen(_listenerEP);
     }
 
@@ -68,8 +78,8 @@ public class Proxy:IDisposable
             SendNotification(this, new ProxyMessage { Message = $"Supplied Address: {remoteAddress} does not resolve to a valid IPv4 address", Severity = 1 });
             return;
         }
-        _senderEP = new IPEndPoint(ipAddress, remotePort);
-        StartSender();
+        var senderEP = new IPEndPoint(ipAddress, remotePort);
+        StartSender(senderEP);
     }
 
     private void StartSender(EndPoint endPoint)
@@ -80,10 +90,6 @@ public class Proxy:IDisposable
 
     public void StartSender()
     {
-        _sender = new ProxyConnector();
-        _sender.Notifications += SendNotification;
-        _sender.Connected += ProxyConnected;
-        _sender.DataReceived += DataReceived;
         _sender.Connect(_senderEP);
     }
 

@@ -21,6 +21,8 @@ internal class ProxyConnector:IDisposable
     private bool IsConnected = false;
     private IPEndPoint _socketEP = null;
     private Socket _socket;
+    private Socket _handler;
+    private byte[] buffer = null;
     /// <summary>
     /// Allow connection to EndPoint and listen for incoming data stream
     /// </summary>
@@ -71,30 +73,44 @@ internal class ProxyConnector:IDisposable
     {
         try
         {
-            if (_socket != null && _socket.Connected)
+            var socket = _handler ?? _socket;
+            if (socket != null && socket.Connected)
             {
-                SendNotification($"Sending to {_socketEP.Address.ToString()}:{_socketEP.Port} ({data.Length} Bytes)");
-                _socket.Send(data);
+                SendNotification($"Sending to {_socketEP.Address}:{_socketEP.Port} ({data.Length} Bytes)");
+                socket.Send(data);
                 // Send scompleted Synchronously - switch to Listen mode
-                SendNotification($"Sent to {_socketEP.Address.ToString()}:{_socketEP.Port} ({data.Length} Bytes)");
+                SendNotification($"Sent to {_socketEP.Address}:{_socketEP.Port} ({data.Length} Bytes)");
                 StateObject state = new StateObject();
-                state.WorkSocket = _socket;
-                if (_socket.Connected)
+                state.WorkSocket = socket;
+                if (socket.Connected)
                 {
-                    // Begin receiving the data from the remote device.  
-                    _socket.BeginReceive(state.buffer, 0, StateObject.BufferSize, SocketFlags.None, new AsyncCallback(ReadDataCallback), state);
+                    // Begin receiving the data from the remote device.
+                    SendNotification($"Start Listening for remote data on {_socketEP.Address}:{_socketEP.Port}");
+                    socket.BeginReceive(state.buffer, 0, StateObject.BufferSize, SocketFlags.None, new AsyncCallback(ReadDataCallback), state);
                 }
                 else
                 {
-                    SendNotification(new IOException("Socket was closed after sending data"));
+                    SendNotification(new IOException($"Socket {_socketEP.Address}:{_socketEP.Port} was closed after sending data"));
                 }
             }
             else
             {
-                throw new IOException("Cannot send data when not connected");
+                if (buffer == null)
+                {
+                    buffer = new byte[data.Length];
+                    data.CopyTo(buffer, 0);
+                }
+                else
+                {
+                    List<byte> tempBuffer = new List<byte>(buffer);
+                    tempBuffer.AddRange(data);
+                    buffer = tempBuffer.ToArray();
+                }
+                SendNotification(new IOException($"Cannot send to {_socketEP?.Address}:{_socketEP?.Port} when not connected, data buffered"));
             }
         }
-        catch(SocketException ex) {
+        catch (SocketException ex)
+        {
             SendNotification(ex);
         }
         catch (Exception ex)
@@ -125,11 +141,14 @@ internal class ProxyConnector:IDisposable
     /// </summary>
     private void StartConnector()
     {
-        SendNotification($"Connecting to {_socketEP.Address.ToString()}:{_socketEP.Port} (Send Mode)");
-        _socket = new Socket(_socketEP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-        _socket.Blocking = false;
-        _socket.BeginConnect(_socketEP, new AsyncCallback(AcceptConnectionCallback), _socket);
-        //connectDone.WaitOne();
+        if (_socketEP != null)
+        {
+            SendNotification($"Connecting to {_socketEP.Address.ToString()}:{_socketEP.Port} (Send Mode)");
+            _socket = new Socket(_socketEP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socket.Blocking = false;
+            _socket.BeginConnect(_socketEP, new AsyncCallback(AcceptConnectionCallback), _socket);
+            connectDone.WaitOne();
+        }
     }
 
     /// <summary>
@@ -163,21 +182,23 @@ internal class ProxyConnector:IDisposable
             var socket = (Socket)ar.AsyncState;
             socket.EndConnect(ar);
             SendNotification($"Connection Established: {_socketEP.Address.ToString()}:{_socketEP.Port}");
-            //StateObject state = new StateObject();
-            //state.WorkSocket = socket;
-            //socket.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-            //    new AsyncCallback(ReadDataCallback), state);
 
             IsConnected = socket.Connected;
 
             if (Connected != null)
-                Task.Run(() => Connected.DynamicInvoke(this, true));
-            //connectDone.Set();
+                Task.Run(() => Connected.DynamicInvoke(this, IsConnected));
+            if (buffer != null)
+            {
+                SendNotification($"Sending buffered data: {buffer.Length} bytes");
+                Send(buffer);
+            }
+            buffer = null;
         }
         catch(Exception ex)
         {
             SendNotification(ex);
         }
+        connectDone.Set();
     }
 
     private void AcceptListenerCallback(IAsyncResult ar)
@@ -185,17 +206,17 @@ internal class ProxyConnector:IDisposable
         try
         {
             var socket = (Socket)ar.AsyncState;
-            Socket handler = socket.EndAccept(ar);
+            _handler = socket.EndAccept(ar);
             // Create the state object.  
             StateObject state = new StateObject();
-            state.WorkSocket = handler;
-            handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+            state.WorkSocket = _handler;
+            _handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                 new AsyncCallback(ReadDataCallback), state);
 
-            IsConnected = socket.Connected;
+            IsConnected = _handler.Connected;
 
             if (Connected != null)
-                Task.Run(() => Connected.DynamicInvoke(this, true));
+                Task.Run(() => Connected.DynamicInvoke(this, IsConnected));
             // Client has connected to listener, initiate connection to MSFS
             SendNotification($"Connection Established: {_socketEP.Address.ToString()}:{_socketEP.Port}");
         }
@@ -210,14 +231,14 @@ internal class ProxyConnector:IDisposable
         try
         {
             StateObject state = (StateObject)ar.AsyncState;
-            Socket handler = state.WorkSocket;
-            if (handler != null)
+            _handler = state.WorkSocket;
+            if (_handler != null)
             {
-                if (handler.Connected)
+                if (_handler.Connected)
                 {
                     // Read data from the socket.  
                     SocketError errorCode = SocketError.NotConnected;
-                    int read = handler.EndReceive(ar, out errorCode);
+                    int read = _handler.EndReceive(ar, out errorCode);
 
                     // Data was read from the client socket.  
                     if (errorCode == SocketError.Success && read > 0)
@@ -228,14 +249,14 @@ internal class ProxyConnector:IDisposable
                             var dataReceived = state.buffer.ToList().Take(read).ToArray();
                             Task.Run(() => DataReceived.DynamicInvoke(this, dataReceived));
                         }
-                        handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
+                        _handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                             new AsyncCallback(ReadDataCallback), state);
                     }
                     if(errorCode != SocketError.Success)
                     {
                         // Need to reconnect the socket
                         SendNotification(new ProxyMessage { Message = $"Socket Error: {errorCode}", Severity = 2 });
-                        if(!handler.Connected)
+                        if(!_handler.Connected)
                             Task.Run(() => Connected.DynamicInvoke(this, false));
                     }
                 }
@@ -247,9 +268,9 @@ internal class ProxyConnector:IDisposable
             }
             else
             {
-                handler?.Close();
-                handler?.Dispose();
-                handler = null;
+                _handler?.Close();
+                _handler?.Dispose();
+                _handler = null;
             }
         }
         catch (Exception ex)
@@ -316,7 +337,7 @@ internal class ProxyConnector:IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_socket.Connected)
+        if (_socket != null && _socket.Connected)
             try
             {
                 _socket?.Shutdown(SocketShutdown.Both);
