@@ -113,38 +113,38 @@ namespace SimConnect_Proxy
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(23, 19);
+            this.label1.Location = new System.Drawing.Point(37, 19);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(88, 13);
+            this.label1.Size = new System.Drawing.Size(77, 13);
             this.label1.TabIndex = 4;
-            this.label1.Text = "Listener Address:";
+            this.label1.Text = "Local Address:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(42, 44);
+            this.label2.Location = new System.Drawing.Point(56, 44);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(69, 13);
+            this.label2.Size = new System.Drawing.Size(58, 13);
             this.label2.TabIndex = 5;
-            this.label2.Text = "Listener Port:";
+            this.label2.Text = "Local Port:";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(26, 82);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(85, 13);
+            this.label3.Size = new System.Drawing.Size(88, 13);
             this.label3.TabIndex = 6;
-            this.label3.Text = "Sender Address:";
+            this.label3.Text = "Remote Address:";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(45, 108);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(66, 13);
+            this.label4.Size = new System.Drawing.Size(69, 13);
             this.label4.TabIndex = 7;
-            this.label4.Text = "Sender Port:";
+            this.label4.Text = "Remote Port:";
             // 
             // pbStartProxy
             // 
@@ -183,7 +183,8 @@ namespace SimConnect_Proxy
             this.txtErrors.Location = new System.Drawing.Point(12, 172);
             this.txtErrors.Multiline = true;
             this.txtErrors.Name = "txtErrors";
-            this.txtErrors.Size = new System.Drawing.Size(384, 266);
+            this.txtErrors.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtErrors.Size = new System.Drawing.Size(384, 303);
             this.txtErrors.TabIndex = 14;
             // 
             // label6
@@ -202,23 +203,23 @@ namespace SimConnect_Proxy
             this.txtDataSent.Multiline = true;
             this.txtDataSent.Name = "txtDataSent";
             this.txtDataSent.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtDataSent.Size = new System.Drawing.Size(379, 188);
+            this.txtDataSent.Size = new System.Drawing.Size(379, 210);
             this.txtDataSent.TabIndex = 16;
             // 
             // txtDataReceived
             // 
             this.txtDataReceived.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtDataReceived.Location = new System.Drawing.Point(409, 250);
+            this.txtDataReceived.Location = new System.Drawing.Point(409, 265);
             this.txtDataReceived.Multiline = true;
             this.txtDataReceived.Name = "txtDataReceived";
             this.txtDataReceived.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtDataReceived.Size = new System.Drawing.Size(379, 188);
+            this.txtDataReceived.Size = new System.Drawing.Size(379, 210);
             this.txtDataReceived.TabIndex = 17;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(399, 4);
+            this.label7.Location = new System.Drawing.Point(406, 7);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(58, 13);
             this.label7.TabIndex = 18;
@@ -227,7 +228,7 @@ namespace SimConnect_Proxy
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(402, 231);
+            this.label8.Location = new System.Drawing.Point(406, 249);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(82, 13);
             this.label8.TabIndex = 19;
@@ -237,7 +238,7 @@ namespace SimConnect_Proxy
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(800, 487);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.txtDataReceived);

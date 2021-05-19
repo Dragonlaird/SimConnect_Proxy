@@ -9,22 +9,28 @@ using System.Threading.Tasks;
 
 public class Proxy:IDisposable
 {
-    private ProxyConnector _sender;
-    private ProxyConnector _listener;
-    private EndPoint _listenerEP;
-    private EndPoint _senderEP;
+    private ProxyConnector _sender; // Remote connection, initiated after a local connection is established
+    private ProxyConnector _listener; // Local listening port, waits for a connection
+    private EndPoint _listenerEP; // EndPoint for Local listening port
+    private EndPoint _senderEP; // EndPoint for Remote connection
 
-    public EventHandler<byte[]> RemoteDataReceived;
-    public EventHandler<bool> RemoteConnected;
-    public EventHandler<byte[]> LocalDataReceived;
-    public EventHandler<bool> LocalConnected;
-    public EventHandler<ProxyMessage> Notifications;
+    public EventHandler<byte[]> RemoteDataReceived; // Event to transfer data received from remote to client application
+    public EventHandler<bool> RemoteConnected; // Event to notify client application when remote connection is established or dropped
+    public EventHandler<byte[]> LocalDataReceived; // Event to transfer data received from local to client application
+    public EventHandler<bool> LocalConnected; // Event to notify client application when local connection is established or dropped
+    public EventHandler<ProxyMessage> Notifications; // Event to send information and error messages to client application
 
+    /// <summary>
+    /// A single-socket Proxy Server to intercept communication between a local application and a remote endpoint
+    /// </summary>
     public Proxy()
     {
         Initialise();
     }
 
+    /// <summary>
+    /// Prepare both Listener and Sender connections, their events to methods below
+    /// </summary>
     private void Initialise()
     {
         _listener = new ProxyConnector();
@@ -39,6 +45,11 @@ public class Proxy:IDisposable
 
     }
 
+    /// <summary>
+    /// Start listening for a local application to connected to a specific local port
+    /// </summary>
+    /// <param name="localAddress">IP Address or name of local computer</param>
+    /// <param name="localPort">Port number to listen to</param>
     public void StartListener(string localAddress, int localPort)
     {
         var ipAddress = Dns.GetHostAddresses(localAddress).FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
@@ -51,12 +62,19 @@ public class Proxy:IDisposable
         StartListener(_listenerEP);
     }
 
+    /// <summary>
+    /// Start listening for a local application to connected to a specific local port
+    /// </summary>
+    /// <param name="endPoint">Local EndPoint to listen on</param>
     public void StartListener(EndPoint endPoint)
     {
         _listenerEP = endPoint;
         StartListener();
     }
 
+    /// <summary>
+    /// Start listening for a local application to connected to saved EndPoint
+    /// </summary>
     private void StartListener()
     {
         // Confirm supplied address is local to this computer
@@ -70,6 +88,20 @@ public class Proxy:IDisposable
         _listener.Listen(_listenerEP);
     }
 
+    /// <summary>
+    /// Stop Listening for data or a connection on local EndPoint, disconnect and dispose of listening connector
+    /// </summary>
+    public void StopListener()
+    {
+        if (_listener != null)
+            _listener.Disconnect();
+    }
+
+    /// <summary>
+    /// Innitiate a connection to a local or remote computer, with the specified port
+    /// </summary>
+    /// <param name="remoteAddress">Computer name or IP Address to connect to</param>
+    /// <param name="remotePort">Port number to connect to</param>
     public void StartSender(string remoteAddress, int remotePort)
     {
         var ipAddress = Dns.GetHostAddresses(remoteAddress).FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
@@ -82,15 +114,31 @@ public class Proxy:IDisposable
         StartSender(senderEP);
     }
 
+    /// <summary>
+    /// Innitiate a connection to a local or remote computer, with the specified port
+    /// </summary>
+    /// <param name="endPoint">Local or Remote EndPoint to connect to</param>
     private void StartSender(EndPoint endPoint)
     {
         _senderEP = endPoint;
         StartSender();
     }
 
+    /// <summary>
+    /// Initiate a connection to the saved remote EndPoint
+    /// </summary>
     public void StartSender()
     {
         _sender.Connect(_senderEP);
+    }
+
+    /// <summary>
+    /// Stop Listening for data and disconnect any established remote EndPoint connection, dsipose of sender connector
+    /// </summary>
+    public void StopSender()
+    {
+        if (_sender != null)
+            _sender.Disconnect();
     }
 
     /// <summary>
@@ -140,11 +188,15 @@ public class Proxy:IDisposable
     }
 
     /// <summary>
-    /// Dispose of both Local Listener and Remote Connector
+    /// Dispose of both Local Listener and Sender Connectors, freeing any local resources used
     /// </summary>
     public void Dispose()
     {
+        _sender?.Disconnect();
         _sender?.Dispose();
+        _senderEP = null;
+        _listener?.Disconnect();
         _listener?.Dispose();
+        _listenerEP = null;
     }
 }
