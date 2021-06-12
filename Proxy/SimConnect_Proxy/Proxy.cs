@@ -169,11 +169,17 @@ public class Proxy:IDisposable
     /// <param name="e">True = Connected; False = Disconnected</param>
     private void ProxyConnected(object sender, bool e)
     {
-        if(sender == _sender && RemoteConnected != null)
+        if (sender == _sender && RemoteConnected != null)
             Task.Run(() => RemoteConnected.DynamicInvoke(this, e));
-        if(sender == _listener && LocalConnected != null)
-            Task.Run(() => LocalConnected.DynamicInvoke(this, e));
+        if (sender == _listener)
+        {
+            if (LocalConnected != null)
+                Task.Run(() => LocalConnected.DynamicInvoke(this, e));
+            if (!e && _sender != null)
+                _sender.Disconnect();
+        }
     }
+
 
     /// <summary>
     /// Inform client application of a status change

@@ -183,6 +183,7 @@ namespace SimConnect_Proxy
             this.txtErrors.Location = new System.Drawing.Point(12, 172);
             this.txtErrors.Multiline = true;
             this.txtErrors.Name = "txtErrors";
+            this.txtErrors.ReadOnly = true;
             this.txtErrors.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtErrors.Size = new System.Drawing.Size(384, 303);
             this.txtErrors.TabIndex = 14;
@@ -205,6 +206,7 @@ namespace SimConnect_Proxy
             this.txtDataSent.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtDataSent.Size = new System.Drawing.Size(379, 210);
             this.txtDataSent.TabIndex = 16;
+            this.txtDataSent.ReadOnly = true;
             // 
             // txtDataReceived
             // 
@@ -215,6 +217,7 @@ namespace SimConnect_Proxy
             this.txtDataReceived.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtDataReceived.Size = new System.Drawing.Size(379, 210);
             this.txtDataReceived.TabIndex = 17;
+            this.txtDataReceived.ReadOnly = true;
             // 
             // label7
             // 

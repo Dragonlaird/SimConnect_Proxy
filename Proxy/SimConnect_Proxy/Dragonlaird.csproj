@@ -31,7 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -49,6 +49,9 @@
     <Compile Include="ProxyConnector.cs" />
     <Compile Include="ProxyMessage.cs" />
     <Compile Include="StateObject.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="James Reeves Code Signing Certificate.pfx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -73,7 +73,7 @@ namespace SimConnect_Proxy
 
         private FileStream CreateFile(string filePath)
         {
-            if (!string.IsNullOrEmpty(filePath) && !filePath.Any(x=> Path.InvalidPathChars.Contains(x)))
+            if (!string.IsNullOrEmpty(filePath) && !filePath.Any(x=> Path.GetInvalidPathChars().Contains(x)))
             {
                 if (File.Exists(filePath))
                     File.Delete(filePath);
@@ -235,7 +235,12 @@ namespace SimConnect_Proxy
         /// <param name="e">Boolean value indicating if connected</param>
         private void LocalConnected(object sender, bool e)
         {
-            _proxy.StartSender(txtSenderAddress.Text, (int)txtSenderPort.Value);
+            if (e)
+                try
+                {
+                    _proxy.StartSender(txtSenderAddress.Text, (int)txtSenderPort.Value);
+                }
+                catch { }
             if (cbLocalConnected.InvokeRequired)
             {
                 cbLocalConnected.Invoke(new Action(() => cbLocalConnected.Checked = e));
@@ -259,5 +264,6 @@ namespace SimConnect_Proxy
             }
             cbRemoteConnected.Checked = e;
         }
+
     }
 }

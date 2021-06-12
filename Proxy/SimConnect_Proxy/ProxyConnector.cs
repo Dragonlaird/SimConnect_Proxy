@@ -73,7 +73,7 @@ internal class ProxyConnector:IDisposable
     {
         try
         {
-            SendNotification($"Disconnecting {_socketEP.Address}:{_socketEP.Port}");
+            SendNotification($"Disconnecting {_socketEP?.Address ?? IPAddress.None}:{_socketEP?.Port ?? 0}");
             if (_handler != null)
             {
                 if (_handler.Connected)
@@ -86,9 +86,12 @@ internal class ProxyConnector:IDisposable
                     _socket.Shutdown(SocketShutdown.Both);
                 _socket.Dispose();
             }
+            _socket = null;
         }
         catch { }
-        SendNotification($"Disconnected {_socketEP.Address}:{_socketEP.Port}");
+        if (Connected != null)
+            Task.Run(() => Connected.DynamicInvoke(this, false));
+        SendNotification($"Disconnected {_socketEP?.Address ?? IPAddress.None}:{_socketEP?.Port ?? 0}");
     }
 
     /// <summary>
@@ -132,7 +135,7 @@ internal class ProxyConnector:IDisposable
                     tempBuffer.AddRange(data);
                     buffer = tempBuffer.ToArray();
                 }
-                SendNotification(new IOException($"Cannot send to {_socketEP?.Address}:{_socketEP?.Port} when not connected, data buffered"));
+                SendNotification(new IOException($"Cannot send to {_socketEP?.Address ?? IPAddress.None}:{_socketEP?.Port ?? 0} when not connected, data buffered"));
             }
         }
         catch (SocketException ex)
